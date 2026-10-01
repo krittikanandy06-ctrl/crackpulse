@@ -19,21 +19,33 @@ def bre_category(w_mm):
     return 5, "Very severe"
 
 
-def find_crack_mask(img):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (3, 3), 0)
-    # blackhat: patli andheri lakeerein (cracks) ubhar kar aati hain
+_SEG = None
+
+
+def raw_mask(img, method):
+    if method == "dl":
+        global _SEG
+        if _SEG is None:
+            from crack_model import CrackSegmenter
+            _SEG = CrackSegmenter("crack_unet.onnx")
+        prob = _SEG.predict(img)
+        return ((prob > 0.5) * 255).astype(np.uint8)
+    # classical: blackhat patli andheri lakeerein ubhaarta hai, Otsu threshold khud chunta hai
+    gray = cv2.GaussianBlur(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), (3, 3), 0)
     k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (31, 31))
     bh = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, k)
-    # fixed number ki jagah Otsu: har photo ke liye threshold khud chunega
-    _, mask = cv2.threshold(bh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    return cv2.threshold(bh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+
+
+def find_crack_mask(img, method="classical"):
+    mask = raw_mask(img, method)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # marker ko mask se hata do (warna woh bhi "crack" lagega)
     corners, ids, _ = _DETECTOR.detectMarkers(gray)
     if ids is not None:
         for c in corners:
-            pts = c.reshape(4, 2).astype(np.int32)
-            x, y, w, h = cv2.boundingRect(pts)
+            x, y, w, h = cv2.boundingRect(c.reshape(4, 2).astype(np.int32))
             pad = int(0.25 * max(w, h))
             cv2.rectangle(mask, (x - pad, y - pad), (x + w + pad, y + h + pad), 0, -1)
 
@@ -73,7 +85,7 @@ def draw(img, skel, dist, widths):
     return out
 
 
-def inspect(path, marker_mm=50.0):
+def inspect(path, marker_mm=50.0, method="classical"):
     img = cv2.imread(path)
     if img is None:
         return {"ok": False, "reason": f"photo nahi khuli: {path}"}
@@ -81,7 +93,7 @@ def inspect(path, marker_mm=50.0):
     if warped is None:
         return {"ok": False, "reason": "marker_not_found"}
 
-    mask = find_crack_mask(warped)
+    mask = find_crack_mask(warped, method)
     skel, dist, widths, length_mm = measure(mask)
     if len(widths) == 0:
         return {"ok": True, "crack_found": False}
@@ -97,15 +109,20 @@ def inspect(path, marker_mm=50.0):
     cv2.imwrite("inspection_result.png", out)
     cv2.imwrite("inspection_mask.png", mask)
 
-    return {"ok": True, "crack_found": True, "image": path,
+    return {"ok": True, "crack_found": True, "image": path, "method": method,
             "width_median_mm": round(w_med, 2), "width_max_mm": round(w_max, 2),
             "length_mm": round(length_mm, 1), "bre_category": cat, "bre_label": label}
 
 
 if __name__ == "__main__":
-    path = sys.argv[1] if len(sys.argv) > 1 else "test_tilted.png"
-    mm = float(sys.argv[2]) if len(sys.argv) > 2 else 50.0
-    result = inspect(path, mm)
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("photo", nargs="?", default="test_tilted.png")
+    ap.add_argument("marker_mm", nargs="?", type=float, default=50.0)
+    ap.add_argument("--method", choices=["classical", "dl"], default="classical",
+                    help="dl = trained U-Net model (crack_unet.onnx chahiye)")
+    a = ap.parse_args()
+    result = inspect(a.photo, a.marker_mm, a.method)
     print(json.dumps(result, indent=2))
     with open("inspection_result.json", "w") as f:
         json.dump(result, f, indent=2)
