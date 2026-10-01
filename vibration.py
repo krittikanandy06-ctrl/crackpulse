@@ -57,15 +57,18 @@ def dominant(signal_mm, fps):
 
 
 def save_plot(sig, path):
-    """Hilne ka graph OpenCV se banao (matplotlib ki zaroorat nahi)."""
+    """Hilne ka graph OpenCV se banao: dark green background, gold wave."""
     W, H = 900, 300
-    img = np.full((H, W, 3), 255, np.uint8)
+    # website ka dark green (BGR)
+    img = np.full((H, W, 3), (18, 24, 8), np.uint8)
     s = sig - sig.mean()
     m = np.abs(s).max() or 1
     pts = np.array([[int(i * (W - 1) / (len(s) - 1)), int(H / 2 - s[i] / m * (H / 2 - 20))]
                     for i in range(len(s))], np.int32)
-    cv2.line(img, (0, H // 2), (W, H // 2), (200, 200, 200), 1)
-    cv2.polylines(img, [pts], False, (0, 0, 200), 2)
+    cv2.line(img, (0, H // 2), (W, H // 2), (60, 80, 50),
+             1)            # beech ki halki line
+    cv2.polylines(img, [pts], False, (106, 196, 233),
+                  2, cv2.LINE_AA)   # gold wave
     cv2.imwrite(path, img)
 
 

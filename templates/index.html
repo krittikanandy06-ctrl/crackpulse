@@ -1,0 +1,1502 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#081812">
+    <title>CrackPulse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #081812;
+            --ink: #eefaf4;
+            --muted: #9cc4b2;
+            --line: rgba(158, 214, 190, .16);
+            --em: #2ee59d;
+            --gold: #e9c46a;
+            --gold2: #f7e2a6;
+            --warn: #ffa94d;
+            --bad: #ff6b6b;
+            --panel: rgba(12, 33, 25, .86);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        [hidden] {
+            display: none !important
+        }
+
+        body {
+            color: var(--ink);
+            font-family: Manrope, "Segoe UI", system-ui, sans-serif;
+            min-height: 100vh;
+            background:
+                radial-gradient(900px 620px at 5% -12%, rgba(46, 229, 157, .17), transparent 60%),
+                radial-gradient(760px 620px at 105% 108%, rgba(233, 196, 106, .15), transparent 60%),
+                var(--bg);
+            background-attachment: fixed;
+        }
+
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 24px 40px;
+            display: grid;
+            grid-template-columns: 1.05fr .95fr;
+            gap: 64px;
+            align-items: center;
+            min-height: 100vh
+        }
+
+        /* ---------- intro ---------- */
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 20px;
+            letter-spacing: .2px
+        }
+
+        h1 {
+            font-family: Fraunces, Georgia, serif;
+            font-weight: 600;
+            font-size: clamp(44px, 6.2vw, 82px);
+            line-height: .98;
+            letter-spacing: -1.2px;
+            margin: 46px 0 8px
+        }
+
+        h1 .g {
+            display: block;
+            background: linear-gradient(100deg, var(--gold) 10%, var(--gold2) 45%, var(--gold) 80%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent
+        }
+
+        .trace-wrap {
+            position: relative;
+            margin: 4px 0 0
+        }
+
+        .trace {
+            display: block;
+            width: 100%;
+            height: 120px;
+            overflow: visible;
+            cursor: pointer;
+            outline: none;
+            border-radius: 12px
+        }
+
+        .trace:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 4px
+        }
+
+        .trace .base {
+            stroke: var(--line);
+            stroke-width: 1;
+            stroke-dasharray: 3 7
+        }
+
+        .trace .wave {
+            fill: none;
+            stroke: url(#tg);
+            stroke-width: 3.2;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+            stroke-dasharray: 1;
+            stroke-dashoffset: 1;
+            filter: drop-shadow(0 0 7px rgba(46, 229, 157, .55));
+            animation: draw 2.8s cubic-bezier(.6, 0, .2, 1) .35s forwards;
+            transition: filter .3s
+        }
+
+        .trace:hover .wave {
+            filter: drop-shadow(0 0 12px rgba(46, 229, 157, .8))
+        }
+
+        @keyframes draw {
+            to {
+                stroke-dashoffset: 0
+            }
+        }
+
+        .rip {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            margin: -7px 0 0 -7px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            pointer-events: none;
+            animation: rip .75s ease-out forwards
+        }
+
+        @keyframes rip {
+            to {
+                transform: scale(7);
+                opacity: 0
+            }
+        }
+
+        .hint {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 2px
+        }
+
+        .hint::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--em);
+            box-shadow: 0 0 0 0 rgba(46, 229, 157, .6);
+            animation: beat 1.8s ease-out infinite
+        }
+
+        @keyframes beat {
+            to {
+                box-shadow: 0 0 0 9px rgba(46, 229, 157, 0)
+            }
+        }
+
+        .lede {
+            color: var(--muted);
+            font-size: 18px;
+            line-height: 1.65;
+            max-width: 46ch;
+            margin: 18px 0 30px
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 520px
+        }
+
+        .stats div {
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid var(--line);
+            transition: transform .25s, border-color .25s
+        }
+
+        .stats div:hover {
+            transform: translateY(-3px);
+            border-color: rgba(233, 196, 106, .45)
+        }
+
+        .stats b {
+            display: block;
+            font-family: Fraunces, Georgia, serif;
+            font-weight: 600;
+            font-size: 30px;
+            color: var(--gold);
+            font-variant-numeric: tabular-nums;
+            line-height: 1.1
+        }
+
+        .stats span {
+            display: block;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.4;
+            margin-top: 4px
+        }
+
+        /* ---------- panel ---------- */
+        .panel {
+            border-radius: 26px;
+            padding: 10px 24px 26px;
+            border: 1px solid transparent;
+            background:
+                linear-gradient(var(--panel), var(--panel)) padding-box,
+                linear-gradient(145deg, rgba(233, 196, 106, .75), rgba(46, 229, 157, .12) 38%, rgba(46, 229, 157, .12) 62%, rgba(233, 196, 106, .45)) border-box;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 40px 90px rgba(0, 0, 0, .45)
+        }
+
+        .tabs {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            margin: 14px 0 22px;
+            padding: 5px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .045);
+            border: 1px solid var(--line)
+        }
+
+        .tabs button {
+            position: relative;
+            z-index: 1;
+            background: none;
+            border: 0;
+            color: var(--muted);
+            font: 600 16px Manrope, sans-serif;
+            padding: 11px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: color .3s
+        }
+
+        .tabs button.active {
+            color: #0b1f18
+        }
+
+        .tabs button:focus-visible {
+            outline: 2px solid var(--em);
+            outline-offset: 2px
+        }
+
+        .tabs i {
+            position: absolute;
+            top: 5px;
+            bottom: 5px;
+            left: 5px;
+            width: calc(50% - 5px);
+            border-radius: 999px;
+            background: linear-gradient(100deg, var(--gold), var(--gold2));
+            transition: transform .4s cubic-bezier(.6, 0, .2, 1);
+            box-shadow: 0 6px 20px rgba(233, 196, 106, .3)
+        }
+
+        .tabs.vib i {
+            transform: translateX(100%)
+        }
+
+        .pane {
+            animation: paneIn .35s ease both
+        }
+
+        @keyframes paneIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px)
+            }
+        }
+
+        .drop {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 220px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 20px;
+            border: 1.5px dashed rgba(46, 229, 157, .4);
+            background: rgba(46, 229, 157, .04);
+            transition: .25s
+        }
+
+        .drop:hover {
+            border-color: var(--em);
+            background: rgba(46, 229, 157, .08);
+            box-shadow: inset 0 0 40px rgba(46, 229, 157, .08)
+        }
+
+        .drop:hover .ico {
+            transform: scale(1.08) rotate(-4deg)
+        }
+
+        .drop:focus-within {
+            outline: 2px solid var(--gold);
+            outline-offset: 3px
+        }
+
+        .ico {
+            width: 62px;
+            height: 62px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            transition: transform .3s;
+            background: rgba(46, 229, 157, .12);
+            border: 1px solid rgba(46, 229, 157, .35)
+        }
+
+        .drop b {
+            font-weight: 700;
+            font-size: 18px;
+            word-break: break-all
+        }
+
+        .drop small {
+            color: var(--muted);
+            font-size: 14px;
+            max-width: 34ch;
+            line-height: 1.5
+        }
+
+        .drop img {
+            max-width: 100%;
+            max-height: 240px;
+            border-radius: 12px;
+            display: none;
+            animation: paneIn .4s ease both
+        }
+
+        .vh {
+            position: absolute;
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+            pointer-events: none
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr;
+            gap: 12px;
+            margin-top: 18px
+        }
+
+        .f {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 7px
+        }
+
+        input[type=number] {
+            width: 100%;
+            height: 50px;
+            padding: 0 14px;
+            background: rgba(0, 0, 0, .25);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            color: var(--ink);
+            font: 600 18px Manrope, sans-serif;
+            transition: .2s
+        }
+
+        input[type=number]:focus {
+            outline: none;
+            border-color: var(--em);
+            box-shadow: 0 0 0 4px rgba(46, 229, 157, .15)
+        }
+
+        .seg {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            padding: 4px;
+            height: 50px;
+            border-radius: 14px;
+            background: rgba(0, 0, 0, .25);
+            border: 1px solid var(--line)
+        }
+
+        .seg label {
+            position: relative;
+            display: block
+        }
+
+        .seg input {
+            position: absolute;
+            opacity: 0
+        }
+
+        .seg span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            border-radius: 10px;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: .2s
+        }
+
+        .seg input:checked+span {
+            background: var(--em);
+            color: #06261a
+        }
+
+        .seg input:focus-visible+span {
+            outline: 2px solid var(--gold);
+            outline-offset: 1px
+        }
+
+        .go {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            margin-top: 22px;
+            height: 58px;
+            border: 0;
+            border-radius: 16px;
+            cursor: pointer;
+            background: linear-gradient(100deg, #d9ad48, var(--gold) 40%, var(--gold2));
+            color: #1c1606;
+            font: 700 18px Manrope, sans-serif;
+            letter-spacing: .2px;
+            box-shadow: 0 14px 34px rgba(233, 196, 106, .28);
+            transition: transform .15s, box-shadow .25s
+        }
+
+        .go:hover {
+            box-shadow: 0 18px 44px rgba(233, 196, 106, .42)
+        }
+
+        .go::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -60%;
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .55), transparent);
+            transform: skewX(-20deg)
+        }
+
+        .go:hover::after {
+            animation: shine .9s ease
+        }
+
+        @keyframes shine {
+            to {
+                left: 130%
+            }
+        }
+
+        .go:active {
+            transform: scale(.985)
+        }
+
+        .go:focus-visible {
+            outline: 2px solid var(--em);
+            outline-offset: 3px
+        }
+
+        /* ---------- results ---------- */
+        .result {
+            margin-top: 26px;
+            padding-top: 24px;
+            border-top: 1px solid var(--line);
+            animation: rise .55s cubic-bezier(.2, .8, .2, 1) both
+        }
+
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(14px)
+            }
+        }
+
+        .rh {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap
+        }
+
+        .rh h2 {
+            font-family: Fraunces, Georgia, serif;
+            font-weight: 600;
+            font-size: 28px
+        }
+
+        .chip {
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 14px
+        }
+
+        .k-ok {
+            background: rgba(46, 229, 157, .14);
+            color: var(--em)
+        }
+
+        .k-gold {
+            background: rgba(233, 196, 106, .16);
+            color: var(--gold)
+        }
+
+        .k-warn {
+            background: rgba(255, 169, 77, .15);
+            color: var(--warn)
+        }
+
+        .k-bad {
+            background: rgba(255, 107, 107, .15);
+            color: var(--bad)
+        }
+
+        .gauge {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+            margin: 16px 0 7px
+        }
+
+        .gauge span {
+            height: 9px;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, .08)
+        }
+
+        .gauge span.on {
+            transform-origin: left;
+            animation: fill .45s cubic-bezier(.2, .8, .2, 1) both;
+            animation-delay: calc(var(--i) * 120ms + .25s)
+        }
+
+        @keyframes fill {
+            from {
+                transform: scaleX(0)
+            }
+        }
+
+        .gauge span.on.l0,
+        .gauge span.on.l1 {
+            background: var(--em);
+            box-shadow: 0 0 10px rgba(46, 229, 157, .5)
+        }
+
+        .gauge span.on.l2 {
+            background: var(--gold);
+            box-shadow: 0 0 10px rgba(233, 196, 106, .5)
+        }
+
+        .gauge span.on.l3 {
+            background: var(--warn);
+            box-shadow: 0 0 10px rgba(255, 169, 77, .5)
+        }
+
+        .gauge span.on.l4,
+        .gauge span.on.l5 {
+            background: var(--bad);
+            box-shadow: 0 0 10px rgba(255, 107, 107, .5)
+        }
+
+        .gl {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .nums {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 18px 0 12px
+        }
+
+        .nums div {
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .035);
+            border: 1px solid var(--line)
+        }
+
+        .nums small {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px
+        }
+
+        .nums b {
+            font-family: Fraunces, Georgia, serif;
+            font-weight: 600;
+            font-size: 32px;
+            line-height: 1.05;
+            font-variant-numeric: tabular-nums
+        }
+
+        .nums b i {
+            font: 600 13px Manrope, sans-serif;
+            font-style: normal;
+            color: var(--muted);
+            margin-left: 3px
+        }
+
+        .note {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 14px
+        }
+
+        .shot {
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            background: #fff
+        }
+
+        .shot img {
+            display: block;
+            width: 100%
+        }
+
+        .shot.reveal img {
+            animation: reveal 1.8s cubic-bezier(.6, 0, .2, 1) .5s both
+        }
+
+        @keyframes reveal {
+            from {
+                clip-path: inset(0 100% 0 0)
+            }
+
+            to {
+                clip-path: inset(0 0 0 0)
+            }
+        }
+
+        .err {
+            border: 1px solid rgba(255, 107, 107, .35);
+            background: rgba(255, 107, 107, .08);
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            font-size: 15px;
+            line-height: 1.5;
+            color: #ffd3d3
+        }
+
+        .err small {
+            display: block;
+            margin-top: 6px;
+            opacity: .75;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-word
+        }
+
+        /* ---------- before / after slider ---------- */
+        .ba {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            user-select: none;
+            --p: 50%;
+            background: #081812
+        }
+
+        .ba>img {
+            display: block;
+            width: 100%
+        }
+
+        .ba-mask {
+            position: absolute;
+            inset: 0;
+            background: #081812;
+            clip-path: inset(0 calc(100% - var(--p)) 0 0)
+        }
+
+        .ba-mask img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            mix-blend-mode: screen
+        }
+
+        .ba-mask::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: var(--em);
+            mix-blend-mode: multiply;
+            pointer-events: none
+        }
+
+        .ba-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: var(--p);
+            width: 2px;
+            margin-left: -1px;
+            background: var(--gold);
+            box-shadow: 0 0 14px rgba(233, 196, 106, .8);
+            pointer-events: none
+        }
+
+        .ba-knob {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 42px;
+            height: 42px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: linear-gradient(100deg, var(--gold), var(--gold2));
+            display: grid;
+            place-items: center;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, .45)
+        }
+
+        .ba-range {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: ew-resize;
+            margin: 0
+        }
+
+        .ba:focus-within .ba-knob {
+            outline: 2px solid var(--ink);
+            outline-offset: 3px
+        }
+
+        .ba-tag {
+            position: absolute;
+            top: 10px;
+            padding: 5px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(8, 24, 18, .78);
+            pointer-events: none
+        }
+
+        .ba-tag.l {
+            left: 10px;
+            color: var(--em)
+        }
+
+        .ba-tag.r {
+            right: 10px;
+            color: var(--gold)
+        }
+
+        /* ---------- live vibration ---------- */
+        .osc {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            gap: 18px;
+            align-items: center;
+            margin: 18px 0 14px;
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .035);
+            border: 1px solid var(--line);
+            --a: 20px;
+            --d: 1s
+        }
+
+        .osc-stage {
+            position: relative;
+            height: 140px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, .28);
+            display: grid;
+            place-items: center;
+            overflow: hidden
+        }
+
+        .lim {
+            position: absolute;
+            border: 0 dashed rgba(233, 196, 106, .55)
+        }
+
+        .osc.y .lim {
+            left: 12px;
+            right: 12px;
+            height: 0;
+            border-top-width: 1px
+        }
+
+        .osc.y .lim.a {
+            top: calc(50% - var(--a))
+        }
+
+        .osc.y .lim.b {
+            top: calc(50% + var(--a))
+        }
+
+        .osc.x .lim {
+            top: 12px;
+            bottom: 12px;
+            width: 0;
+            border-left-width: 1px
+        }
+
+        .osc.x .lim.a {
+            left: calc(50% - var(--a))
+        }
+
+        .osc.x .lim.b {
+            left: calc(50% + var(--a))
+        }
+
+        .osc-m {
+            position: relative;
+            z-index: 1;
+            display: block;
+            filter: drop-shadow(0 0 10px rgba(46, 229, 157, .45));
+            animation-duration: var(--d);
+            animation-timing-function: ease-in-out;
+            animation-iteration-count: infinite
+        }
+
+        .osc.y .osc-m {
+            animation-name: oscY
+        }
+
+        .osc.x .osc-m {
+            animation-name: oscX
+        }
+
+        @keyframes oscY {
+
+            0%,
+            100% {
+                transform: translateY(calc(var(--a) * -1))
+            }
+
+            50% {
+                transform: translateY(var(--a))
+            }
+        }
+
+        @keyframes oscX {
+
+            0%,
+            100% {
+                transform: translateX(calc(var(--a) * -1))
+            }
+
+            50% {
+                transform: translateX(var(--a))
+            }
+        }
+
+        .osc-txt b {
+            display: block;
+            font-family: Fraunces, Georgia, serif;
+            font-weight: 600;
+            font-size: 26px;
+            color: var(--gold);
+            line-height: 1.15
+        }
+
+        .osc-txt small {
+            display: block;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-top: 6px
+        }
+
+        /* ---------- loading ---------- */
+        #loading {
+            position: fixed;
+            inset: 0;
+            background: rgba(6, 18, 13, .92);
+            backdrop-filter: blur(6px);
+            display: none;
+            place-items: center;
+            z-index: 10
+        }
+
+        #loading.on {
+            display: grid
+        }
+
+        .ring {
+            width: 74px;
+            height: 74px;
+            margin: 0 auto;
+            border-radius: 50%;
+            background: conic-gradient(var(--em), var(--gold), transparent 70%);
+            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+            mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+            animation: spin 1s linear infinite
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .scanbox {
+            position: relative;
+            width: min(84vw, 440px);
+            margin: 0 auto;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(46, 229, 157, .5);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, .5)
+        }
+
+        .scanbox img {
+            display: block;
+            width: 100%;
+            max-height: 56vh;
+            object-fit: cover;
+            filter: brightness(.72) saturate(.85)
+        }
+
+        .scanbox::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(rgba(46, 229, 157, .09) 1px, transparent 1px) 0 0/22px 22px,
+                linear-gradient(90deg, rgba(46, 229, 157, .09) 1px, transparent 1px) 0 0/22px 22px
+        }
+
+        .laser {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 3px;
+            z-index: 1;
+            background: var(--em);
+            box-shadow: 0 0 18px 3px rgba(46, 229, 157, .85);
+            animation: laser 1.6s ease-in-out infinite alternate
+        }
+
+        .laser::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 3px;
+            height: 80px;
+            background: linear-gradient(transparent, rgba(46, 229, 157, .25))
+        }
+
+        @keyframes laser {
+            to {
+                top: calc(100% - 3px)
+            }
+        }
+
+        #lt {
+            margin-top: 18px;
+            text-align: center;
+            font-family: Fraunces, Georgia, serif;
+            font-size: 22px
+        }
+
+        footer {
+            grid-column: 1/-1;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
+            padding-top: 4px
+        }
+
+        @media (max-width:920px) {
+            .page {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                min-height: 0;
+                padding-top: 22px
+            }
+
+            h1 {
+                margin-top: 28px
+            }
+
+            .stats {
+                max-width: none
+            }
+        }
+
+        @media (max-width:460px) {
+            .row {
+                grid-template-columns: 1fr
+            }
+
+            .stats {
+                gap: 8px
+            }
+
+            .stats b {
+                font-size: 24px
+            }
+
+            .nums {
+                gap: 6px
+            }
+
+            .nums b {
+                font-size: 24px
+            }
+
+            .panel {
+                padding: 8px 16px 20px;
+                border-radius: 22px
+            }
+
+            .osc {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation: none !important;
+                transition: none !important
+            }
+
+            .trace .wave {
+                stroke-dashoffset: 0
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% set reasons = {
+    "marker_not_found": "Marker not found. Keep the whole printed marker flat and inside the frame, then try again.",
+    "video_not_opened": "This video could not be opened. Try an .mp4 file.",
+    "timeout": "Processing took too long. Try a shorter video or a smaller photo.",
+    "script_error": "The analysis stopped with an error.",
+    "bad_output": "The analysis returned something unexpected."
+    } %}
+    {% set levels = ["Negligible","Very slight","Slight","Moderate","Severe","Very severe"] %}
+
+    <div id="loading">
+        <div>
+            <div class="scanbox" id="scanbox" hidden><img id="scanimg" alt=""><span class="laser"></span></div>
+            <div class="ring" id="ring"></div>
+            <div id="lt">Analysing</div>
+        </div>
+    </div>
+
+    <main class="page">
+        <!-- ===== intro ===== -->
+        <section>
+            <div class="brand">
+                <svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="#f7e2a6" />
+                            <stop offset="1" stop-color="#d9ad48" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="40" height="40" rx="11" fill="url(#lg)" />
+                    <polyline points="5,21 10,19 13,24 16,14 19,26 23,20 27,13 31,27 34,20 36,20" fill="none"
+                        stroke="#0b1f18" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" />
+                </svg>
+                CrackPulse
+            </div>
+
+            <h1>Crack width in millimetres. <span class="g">Vibration in hertz.</span></h1>
+
+            <div class="trace-wrap" id="traceWrap">
+                <svg class="trace" id="trace" viewBox="0 0 1000 120" preserveAspectRatio="none" role="button"
+                    tabindex="0" aria-label="Tap to shake the wave">
+                    <defs>
+                        <linearGradient id="tg" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0" stop-color="#2ee59d" />
+                            <stop offset=".55" stop-color="#8fe0a0" />
+                            <stop offset="1" stop-color="#e9c46a" />
+                        </linearGradient>
+                    </defs>
+                    <line class="base" x1="0" y1="60" x2="1000" y2="60" vector-effect="non-scaling-stroke" />
+                    <path class="wave" id="wave" pathLength="1" vector-effect="non-scaling-stroke" d="M0 60 L1000 60" />
+                </svg>
+            </div>
+            <p class="hint">Tap the wave to shake it</p>
+
+            <p class="lede">Put the printed marker next to a crack and take a photo to get its width, length and damage
+                category.
+                Film the marker on a moving structure to see how fast and how far it shakes.</p>
+
+            <div class="stats">
+                <div><b class="count">0.856</b><span>Crack detection F1 on DeepCrack</span></div>
+                <div><b class="count">~1 s</b><span>Per photo on a laptop CPU</span></div>
+                <div><b class="count">1.3%</b><span>Vibration error on a known signal</span></div>
+            </div>
+        </section>
+
+        <!-- ===== tool ===== -->
+        <section class="panel">
+            <div class="tabs" role="tablist">
+                <i></i>
+                <button id="t-crack" role="tab" onclick="show('crack')">Crack</button>
+                <button id="t-vib" role="tab" onclick="show('vib')">Vibration</button>
+            </div>
+
+            {% if error %}<div class="err">{{ error }}</div>{% endif %}
+
+            <!-- crack -->
+            <div id="crack" class="pane">
+                <form action="/inspect" method="post" enctype="multipart/form-data"
+                    onsubmit="load('Scanning for cracks','photo')">
+                    <label class="drop" for="photo">
+                        <img id="pv-photo" alt="Selected photo">
+                        <div class="ico" id="ic-photo">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2ee59d"
+                                stroke-width="1.7" aria-hidden="true">
+                                <path d="M4 8h3l2-3h6l2 3h3v11H4z" stroke-linejoin="round" />
+                                <circle cx="12" cy="13" r="3.5" />
+                            </svg>
+                        </div>
+                        <b id="nm-photo">Take or choose a photo</b>
+                        <small>Marker flat on the surface, right next to the crack. Shoot straight on, no flash.</small>
+                        <input class="vh" type="file" id="photo" name="photo" accept="image/*"
+                            onchange="preview(this,'photo')">
+                    </label>
+                    <div class="row">
+                        <div><label class="f" for="mm1">Marker size (mm)</label>
+                            <input id="mm1" type="number" name="marker_mm" value="50" step="0.1" min="1">
+                        </div>
+                        <div><span class="f">Detection</span>
+                            <div class="seg">
+                                <label><input type="radio" name="method" value="dl" checked><span>AI
+                                        model</span></label>
+                                <label><input type="radio" name="method"
+                                        value="classical"><span>Classical</span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="go">Measure crack</button>
+                </form>
+
+                {% if crack %}
+                <div class="result" id="result">
+                    {% if crack.ok and crack.crack_found %}
+                    {% set c = crack.bre_category %}
+                    {% set tone = 'k-ok' if c <= 1 else ('k-gold' if c==2 else ('k-warn' if c==3 else 'k-bad' )) %} <div
+                        class="rh">
+                        <h2>Crack measured</h2><span class="chip {{ tone }}">Category {{ c }}: {{ crack.bre_label
+                            }}</span></div>
+                <div class="gauge" aria-label="Damage category {{ c }} of 5">
+                    {% for i in range(6) %}<span class="l{{ i }} {{ 'on' if i <= c }}" style="--i:{{ i }}"
+                        title="{{ i }}: {{ levels[i] }}"></span>{% endfor %}
+                </div>
+                <div class="gl"><span>Negligible</span><span>Very severe</span></div>
+                <div class="nums">
+                    <div><small>Typical width</small><b class="count">{{ crack.width_median_mm }}<i>mm</i></b></div>
+                    <div><small>Widest point</small><b class="count">{{ crack.width_max_mm }}<i>mm</i></b></div>
+                    <div><small>Length</small><b class="count">{{ crack.length_mm }}<i>mm</i></b></div>
+                </div>
+                <p class="note">Detected with the {{ 'AI model (U-Net)' if crack.method == 'dl' else 'classical method'
+                    }}. Category follows the BRE damage scale.</p>
+                {% if crack_img and crack_mask %}
+                <div class="ba" id="ba">
+                    <img src="{{ url_for('static', filename=crack_img) }}"
+                        alt="Photo with the detected crack highlighted">
+                    <div class="ba-mask"><img src="{{ url_for('static', filename=crack_mask) }}"
+                            alt="Crack mask seen by the AI"></div>
+                    <span class="ba-tag l">AI view</span><span class="ba-tag r">Photo</span>
+                    <span class="ba-line"><span class="ba-knob">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1c1606"
+                                stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M9 6l-6 6 6 6M15 6l6 6-6 6" />
+                            </svg>
+                        </span></span>
+                    <input class="ba-range" type="range" min="0" max="100" value="50" step="0.5"
+                        aria-label="Compare the AI view with the photo">
+                </div>
+                <p class="note" style="margin-top:10px">Drag the handle to compare what the AI sees with the photo.</p>
+                {% elif crack_img %}
+                <div class="shot"><img src="{{ url_for('static', filename=crack_img) }}"
+                        alt="Photo with the detected crack highlighted"></div>
+                {% endif %}
+                {% elif crack.ok %}
+                <div class="rh">
+                    <h2>No crack found</h2><span class="chip k-ok">Surface clear</span>
+                </div>
+                <p class="note" style="margin-top:10px">Nothing crack-like was detected. If you can see one, move closer
+                    and retake the photo.</p>
+                {% else %}
+                <div class="err">{{ reasons.get(crack.reason, crack.reason) }}{% if crack.detail %}<small>{{
+                        crack.detail }}</small>{% endif %}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+            </div>
+
+            <!-- vibration -->
+            <div id="vib" class="pane">
+                <form action="/vibration" method="post" enctype="multipart/form-data"
+                    onsubmit="load('Tracking the marker','video')">
+                    <label class="drop" for="video">
+                        <div class="ico" id="ic-video">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2ee59d"
+                                stroke-width="1.7" aria-hidden="true">
+                                <rect x="3" y="6" width="13" height="12" rx="2" />
+                                <path d="M16 10.5l5-3v9l-5-3z" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <b id="nm-video">Record or choose a video</b>
+                        <small>Marker fixed to the structure. Keep the phone still, ideally on a tripod.</small>
+                        <input class="vh" type="file" id="video" name="video" accept="video/*"
+                            onchange="preview(this,'video')">
+                    </label>
+                    <div class="row" style="grid-template-columns:1fr">
+                        <div><label class="f" for="mm2">Marker size (mm)</label>
+                            <input id="mm2" type="number" name="marker_mm" value="50" step="0.1" min="1">
+                        </div>
+                    </div>
+                    <button class="go">Measure vibration</button>
+                </form>
+
+                {% if vib %}
+                <div class="result" id="result">
+                    {% if vib.ok %}
+                    <div class="rh">
+                        <h2>Vibration measured</h2><span class="chip k-gold">{{ vib.main_axis|capitalize }}
+                            movement</span>
+                    </div>
+                    <div class="osc {{ 'x' if vib.main_axis == 'horizontal' else 'y' }}" id="osc"
+                        data-f="{{ vib.frequency_hz }}" data-a="{{ vib.amplitude_mm }}">
+                        <div class="osc-stage">
+                            <span class="lim a"></span><span class="lim b"></span>
+                            <svg class="osc-m" width="46" height="46" viewBox="0 0 8 8" shape-rendering="crispEdges"
+                                aria-hidden="true">
+                                <rect width="8" height="8" fill="#fff" />
+                                <rect x="1" y="1" width="6" height="6" fill="#0b1f18" />
+                                <rect x="2" y="2" width="1" height="1" fill="#fff" />
+                                <rect x="4" y="2" width="1" height="1" fill="#fff" />
+                                <rect x="3" y="3" width="1" height="1" fill="#fff" />
+                                <rect x="5" y="3" width="1" height="1" fill="#fff" />
+                                <rect x="2" y="4" width="1" height="1" fill="#fff" />
+                                <rect x="3" y="5" width="1" height="1" fill="#fff" />
+                                <rect x="5" y="5" width="1" height="1" fill="#fff" />
+                            </svg>
+                        </div>
+                        <div class="osc-txt">
+                            <b>{{ vib.frequency_hz }} times a second</b>
+                            <small id="oscNote">The marker moves at the real measured speed. Movement size is enlarged
+                                so you can see it.</small>
+                        </div>
+                    </div>
+                    <div class="nums">
+                        <div><small>Frequency</small><b class="count">{{ vib.frequency_hz }}<i>Hz</i></b></div>
+                        <div><small>Amplitude</small><b class="count">{{ vib.amplitude_mm }}<i>mm</i></b></div>
+                        <div><small>Frames tracked</small><b class="count">{{ vib.marker_found_frames }}<i>of {{
+                                    vib.frames }}</i></b></div>
+                    </div>
+                    <p class="note">Scale from the marker: {{ vib.mm_per_px }} mm per pixel, at {{ vib.fps }} frames per
+                        second.</p>
+                    {% if vib_img %}<div class="shot reveal"><img src="{{ url_for('static', filename=vib_img) }}"
+                            alt="Marker movement over time"></div>{% endif %}
+                    {% else %}
+                    <div class="err">{{ reasons.get(vib.reason, vib.reason) }}{% if vib.detail %}<small>{{ vib.detail
+                            }}</small>{% endif %}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <footer>Built for the OpenCV AI Competition 2026</footer>
+    </main>
+
+    <script>
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        /* ---------- tabs ---------- */
+        const tabs = document.querySelector('.tabs');
+        function show(t) {
+            for (const id of ['crack', 'vib']) {
+                const pane = document.getElementById(id);
+                pane.hidden = (id !== t);
+                if (id === t) { pane.style.animation = 'none'; pane.offsetHeight; pane.style.animation = ''; }
+                const b = document.getElementById('t-' + id);
+                b.classList.toggle('active', id === t);
+                b.setAttribute('aria-selected', id === t);
+            }
+            tabs.classList.toggle('vib', t === 'vib');
+        }
+        show('{{ tab or "crack" }}');
+
+        /* ---------- live wave: tap to shake ---------- */
+        const wave = document.getElementById('wave');
+        const trace = document.getElementById('trace');
+        const traceWrap = document.getElementById('traceWrap');
+        const crackPts = [[0, 60], [40, 57], [68, 65], [92, 50], [118, 72], [146, 45], [172, 78], [200, 38], [228, 84], [258, 34], [300, 60]];
+        let kick = 0, t = 0, last = 0;
+
+        function buildPath(time, k) {
+            let d = '';
+            crackPts.forEach(([x, y], i) => {
+                const inner = i > 0 && i < crackPts.length - 1;
+                const jitter = inner ? Math.sin(time * 38 + i * 1.7) * k * 7 : 0;
+                d += (i ? ' L' : 'M') + x + ' ' + (y + jitter).toFixed(1);
+            });
+            const amp = 32 + 2.5 * Math.sin(time * 1.3) + k * 38;
+            const speed = 5 + k * 7;
+            for (let x = 305; x <= 1000; x += 5) {
+                const u = x - 300;
+                const y = 60 + amp * Math.exp(-u / 420) * Math.sin(u * 0.063 - time * speed);
+                d += ' L' + x + ' ' + Math.max(2, Math.min(118, y)).toFixed(1);
+            }
+            return d;
+        }
+        wave.setAttribute('d', buildPath(0, 0));
+
+        function frame(now) {
+            const dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
+            last = now; t += dt;
+            kick *= Math.exp(-dt * 2.2);
+            wave.setAttribute('d', buildPath(t, kick));
+            requestAnimationFrame(frame);
+        }
+        if (!reduce) {
+            setTimeout(() => { wave.style.strokeDasharray = 'none'; requestAnimationFrame(frame); }, 3200);
+        }
+
+        function shake(x, y) {
+            kick = Math.min(kick + 0.9, 2.2);
+            if (reduce) return;
+            const r = document.createElement('span');
+            r.className = 'rip';
+            r.style.left = x + 'px'; r.style.top = y + 'px';
+            traceWrap.appendChild(r);
+            setTimeout(() => r.remove(), 800);
+        }
+        trace.addEventListener('click', e => {
+            const box = traceWrap.getBoundingClientRect();
+            shake(e.clientX - box.left, e.clientY - box.top);
+        });
+        trace.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const box = traceWrap.getBoundingClientRect();
+                shake(box.width * 0.5, box.height * 0.5);
+            }
+        });
+        trace.addEventListener('pointermove', () => { kick = Math.max(kick, 0.25); });
+
+        /* ---------- count-up numbers ---------- */
+        function countUp(el, delay) {
+            const node = el.firstChild;
+            if (!node || node.nodeType !== 3) return;
+            const txt = node.nodeValue;
+            const m = txt.match(/\d+(\.\d+)?/);
+            if (!m) return;
+            const target = parseFloat(m[0]);
+            const dec = (m[0].split('.')[1] || '').length;
+            const pre = txt.slice(0, m.index), post = txt.slice(m.index + m[0].length);
+            if (reduce) return;
+            node.nodeValue = pre + (0).toFixed(dec) + post;
+            setTimeout(() => {
+                const start = performance.now(), dur = 1100;
+                (function step(now) {
+                    const p = Math.min((now - start) / dur, 1);
+                    const e = 1 - Math.pow(1 - p, 3);
+                    node.nodeValue = pre + (target * e).toFixed(dec) + post;
+                    if (p < 1) requestAnimationFrame(step);
+                })(start);
+            }, delay);
+        }
+        document.querySelectorAll('.stats .count').forEach((el, i) => countUp(el, 900 + i * 150));
+        document.querySelectorAll('.nums .count').forEach((el, i) => countUp(el, 300 + i * 120));
+
+        /* ---------- before / after slider ---------- */
+        const ba = document.getElementById('ba');
+        if (ba) {
+            const range = ba.querySelector('.ba-range');
+            const setP = v => ba.style.setProperty('--p', v + '%');
+            let touched = false;
+            range.addEventListener('input', () => { touched = true; setP(range.value); });
+            range.addEventListener('pointerdown', () => { touched = true; });
+            function tween(a, b, dur) {
+                return new Promise(res => {
+                    const s = performance.now();
+                    (function st(n) {
+                        if (touched) return res();
+                        const p = Math.min((n - s) / dur, 1);
+                        const e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+                        const v = a + (b - a) * e;
+                        setP(v); range.value = v;
+                        if (p < 1) requestAnimationFrame(st); else res();
+                    })(s);
+                });
+            }
+            if (!reduce) {
+                setTimeout(async () => { await tween(50, 82, 650); await tween(82, 18, 900); await tween(18, 50, 650); }, 1200);
+            }
+        }
+
+        /* ---------- live vibration marker ---------- */
+        const osc = document.getElementById('osc');
+        if (osc) {
+            const f = parseFloat(osc.dataset.f) || 0;
+            const a = parseFloat(osc.dataset.a) || 0;
+            osc.style.setProperty('--a', Math.max(8, Math.min(34, a * 12)) + 'px');
+            if (f > 0) {
+                let shown = f;
+                if (f > 6) {
+                    shown = 4;
+                    document.getElementById('oscNote').textContent =
+                        'Shown slowed down to 4 times a second so you can follow it. Movement size is enlarged too.';
+                }
+                osc.style.setProperty('--d', (1 / shown).toFixed(3) + 's');
+            } else {
+                osc.querySelector('.osc-m').style.animation = 'none';
+            }
+        }
+
+        /* ---------- result: scroll into view on phones ---------- */
+        const result = document.getElementById('result');
+        if (result && innerWidth < 920) {
+            setTimeout(() => result.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }), 250);
+        }
+
+        /* ---------- upload preview + loading ---------- */
+        function preview(inp, k) {
+            const f = inp.files[0]; if (!f) return;
+            document.getElementById('nm-' + k).textContent = f.name;
+            if (f.type.startsWith('image/')) {
+                const im = document.getElementById('pv-' + k);
+                im.src = URL.createObjectURL(f); im.style.display = 'block';
+                document.getElementById('ic-' + k).style.display = 'none';
+            }
+        }
+        function load(msg, kind) {
+            document.getElementById('lt').textContent = msg;
+            const box = document.getElementById('scanbox');
+            const ring = document.getElementById('ring');
+            const pv = document.getElementById('pv-photo');
+            if (kind === 'photo' && pv.getAttribute('src')) {
+                document.getElementById('scanimg').src = pv.src;
+                box.hidden = false; ring.hidden = true;
+            } else {
+                box.hidden = true; ring.hidden = false;
+            }
+            document.getElementById('loading').classList.add('on');
+        }
+        window.addEventListener('pageshow', () => document.getElementById('loading').classList.remove('on'));
+    </script>
+</body>
+
+</html>
