@@ -1,11 +1,12 @@
 import json
+import re
 import shutil
 import subprocess
 import sys
 import uuid
 from pathlib import Path
 
-from flask import Flask, render_template, request
+from flask import Flask, jsonify, render_template, request
 
 BASE = Path(__file__).parent
 UPLOADS = BASE / "static" / "uploads"
@@ -75,7 +76,8 @@ def inspect():
     ok = result.get("ok")
     img = copy_output("inspection_result.png", uid) if ok else None
     mask = copy_output("inspection_mask.png", uid) if ok else None
-    return render_template("index.html", tab="crack", crack=result, crack_img=img, crack_mask=mask)
+    return render_template("index.html", tab="crack", crack=result, crack_img=img, crack_mask=mask,
+                           uid=uid, marker_mm=get_marker_mm(), method=method)
 
 
 @app.route("/vibration", methods=["POST"])
@@ -86,7 +88,53 @@ def vibration():
     uid, video = save_upload(f, ".mp4")
     result = run_script(["vibration.py", str(video), get_marker_mm()])
     img = copy_output("vibration_plot.png", uid) if result.get("ok") else None
-    return render_template("index.html", tab="vib", vib=result, vib_img=img)
+    return render_template("index.html", tab="vib", vib=result, vib_img=img,
+                           uid=uid, marker_mm=get_marker_mm())
+
+
+@app.route("/report", methods=["POST"])
+def report():
+    """Pehle upload hui photo/video par agent.py chalao, report + steps JSON mein lautao."""
+    kind = request.form.get("kind")
+    uid = request.form.get("uid", "")
+    if kind not in ("crack", "vib") or not re.fullmatch(r"[0-9a-f]{8}", uid):
+        return jsonify(ok=False, error="Bad request."), 400
+    files = list(UPLOADS.glob(f"{uid}.*"))
+    if not files:
+        return jsonify(ok=False, error="The uploaded file is no longer available. Upload it again."), 404
+
+    # relative path: report mein server ka poora folder path na dikhe
+    args = [str(BASE / "agent.py"), "--photo" if kind == "crack" else "--video",
+            files[0].relative_to(BASE).as_posix(),
+            "--marker-mm", get_marker_mm()]
+    if kind == "crack":
+        method = request.form.get("method", "dl")
+        args += ["--method", method if method in ("dl", "classical") else "dl"]
+    try:
+        # stdin band: agent ka "naya file do" wala sawaal yahan skip ho jaata hai
+        p = subprocess.run([sys.executable, *args], cwd=BASE, capture_output=True, text=True,
+                           timeout=600, stdin=subprocess.DEVNULL)
+    except subprocess.TimeoutExpired:
+        return jsonify(ok=False, error="The report took too long. Try again."), 504
+    m = re.search(r"^Log: (.+\.json)\s*$", p.stdout, re.M)
+    if not m:
+        return jsonify(ok=False, error="The agent stopped with an error."), 500
+    log = json.loads((BASE / m.group(1).strip()).read_text(encoding="utf-8"))
+
+    steps = []
+    for s in log["steps"]:
+        if s["type"] == "tool":
+            out = s["output"]
+            steps.append({"kind": "tool", "name": s["tool"], "seconds": s["seconds"],
+                          "ok": bool(out.get("ok")), "reason": out.get("reason")})
+        elif s["type"] == "llm":
+            steps.append({"kind": "llm", "name": log.get("model"), "seconds": s["seconds"],
+                          "tokens": s["tokens"], "stop": s["stop_reason"]})
+        elif s["type"] == "fallback":
+            steps.append({"kind": "fallback", "reason": s["reason"].split(":")[0]})
+    return jsonify(ok=True, report=log["report"], offline=log["mode"] != "bedrock",
+                   model=log.get("model"), mode=log["mode"], steps=steps,
+                   total_seconds=log["total_seconds"], tokens=log["total_tokens"])
 
 
 if __name__ == "__main__":
