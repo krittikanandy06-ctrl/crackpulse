@@ -913,6 +913,197 @@
             margin-top: 6px
         }
 
+        /* ---------- AI inspection report ---------- */
+        .ai-go {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            margin-top: 18px;
+            height: 52px;
+            border-radius: 16px;
+            border: 1px solid rgba(233, 196, 106, .55);
+            background: rgba(233, 196, 106, .07);
+            color: var(--gold2);
+            font: 700 16px Manrope, sans-serif;
+            cursor: pointer;
+            transition: background .2s, box-shadow .25s, transform .15s
+        }
+
+        .ai-go:hover {
+            background: rgba(233, 196, 106, .14);
+            box-shadow: 0 10px 28px rgba(233, 196, 106, .16)
+        }
+
+        .ai-go:active {
+            transform: scale(.985)
+        }
+
+        .ai-go:focus-visible {
+            outline: 2px solid var(--em);
+            outline-offset: 3px
+        }
+
+        .ai-go[disabled] {
+            opacity: .55;
+            cursor: default
+        }
+
+        .report {
+            margin-top: 18px;
+            padding: 20px 20px 16px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, .03);
+            animation: rise .55s cubic-bezier(.2, .8, .2, 1) both
+        }
+
+        .report .rh h2 {
+            font-size: 24px
+        }
+
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0 4px
+        }
+
+        .badge-draft {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 13px;
+            border-radius: 999px;
+            background: rgba(255, 169, 77, .14);
+            border: 1px solid rgba(255, 169, 77, .4);
+            color: var(--warn);
+            font-weight: 700;
+            font-size: 13px
+        }
+
+        .badge-off {
+            padding: 7px 13px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .05);
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 13px
+        }
+
+        .rp h3 {
+            font-family: Fraunces, Georgia, serif;
+            font-weight: 600;
+            font-size: 17px;
+            color: var(--gold);
+            margin: 16px 0 6px
+        }
+
+        .rp p,
+        .rp li {
+            font-size: 14.5px;
+            line-height: 1.6;
+            color: var(--ink)
+        }
+
+        .rp ul {
+            padding-left: 18px
+        }
+
+        .rp li::marker {
+            color: var(--em)
+        }
+
+        .rp .chk {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .how {
+            margin-top: 16px;
+            border-top: 1px solid var(--line);
+            padding-top: 12px
+        }
+
+        .how summary {
+            cursor: pointer;
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 14px;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .how summary::-webkit-details-marker {
+            display: none
+        }
+
+        .how summary::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-right: 2px solid var(--em);
+            border-bottom: 2px solid var(--em);
+            transform: rotate(-45deg);
+            transition: transform .2s
+        }
+
+        .how[open] summary::before {
+            transform: rotate(45deg)
+        }
+
+        .how summary:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 3px;
+            border-radius: 6px
+        }
+
+        .how ol {
+            list-style: none;
+            margin: 12px 0 4px;
+            counter-reset: s
+        }
+
+        .how li {
+            counter-increment: s;
+            display: grid;
+            grid-template-columns: 26px 1fr auto;
+            gap: 10px;
+            align-items: baseline;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--line);
+            font-size: 13.5px
+        }
+
+        .how li::before {
+            content: counter(s);
+            font-weight: 700;
+            color: var(--em)
+        }
+
+        .how li small {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 2px
+        }
+
+        .how li time {
+            color: var(--gold);
+            font-variant-numeric: tabular-nums;
+            font-weight: 600
+        }
+
+        .how .tot {
+            color: var(--muted);
+            font-size: 12.5px;
+            margin-top: 8px
+        }
+
         /* ---------- loading ---------- */
         #loading {
             position: fixed;
@@ -1088,6 +1279,18 @@
     "bad_output": "The analysis returned something unexpected."
     } %}
     {% set levels = ["Negligible","Very slight","Slight","Moderate","Severe","Very severe"] %}
+    {% macro ai_report(kind) %}
+    <button type="button" class="ai-go" data-kind="{{ kind }}" data-uid="{{ uid }}" data-mm="{{ marker_mm }}"
+        data-method="{{ method or 'dl' }}" onclick="aiReport(this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 3h9l4 4v14H6z" />
+            <path d="M14 3v5h5M9 13h7M9 17h5" />
+        </svg>
+        Generate AI inspection report
+    </button>
+    <div class="ai-out" aria-live="polite"></div>
+    {% endmacro %}
 
     <div id="loading">
         <div>
@@ -1239,6 +1442,7 @@
                 <div class="err">{{ reasons.get(crack.reason, crack.reason) }}{% if crack.detail %}<small>{{
                         crack.detail }}</small>{% endif %}</div>
                 {% endif %}
+                {% if crack.ok and uid %}{{ ai_report('crack') }}{% endif %}
             </div>
             {% endif %}
             </div>
@@ -1308,6 +1512,7 @@
                         second.</p>
                     {% if vib_img %}<div class="shot reveal"><img src="{{ url_for('static', filename=vib_img) }}"
                             alt="Marker movement over time"></div>{% endif %}
+                    {% if uid %}{{ ai_report('vib') }}{% endif %}
                     {% else %}
                     <div class="err">{{ reasons.get(vib.reason, vib.reason) }}{% if vib.detail %}<small>{{ vib.detail
                             }}</small>{% endif %}</div>
@@ -1496,6 +1701,102 @@
             document.getElementById('loading').classList.add('on');
         }
         window.addEventListener('pageshow', () => document.getElementById('loading').classList.remove('on'));
+
+        /* ---------- AI inspection report ---------- */
+        const SECTIONS = ['Inputs', 'Crack measurement', 'Vibration measurement', 'Observations',
+            'Recommended next steps', 'Limitations'];
+        const TOOL_NAMES = { inspect_crack: 'Crack measurement', measure_vibration: 'Vibration measurement' };
+
+        function el(tag, cls, text) {
+            const e = document.createElement(tag);
+            if (cls) e.className = cls;
+            if (text != null) e.textContent = text;
+            return e;
+        }
+
+        function renderReport(text) {
+            const box = el('div', 'rp');
+            let ul = null;
+            for (let line of text.split('\n')) {
+                line = line.trim();
+                const head = line.replace(/[:#*]/g, '').trim();
+                if (!line || /^DRAFT\b/i.test(line)) { ul = null; continue; }
+                if (SECTIONS.some(s => s.toLowerCase() === head.toLowerCase())) {
+                    box.appendChild(el('h3', null, head)); ul = null;
+                } else if (/^[-*•]\s+/.test(line)) {
+                    if (!ul) ul = box.appendChild(el('ul'));
+                    ul.appendChild(el('li', null, line.replace(/^[-*•]\s+/, '')));
+                } else if (/^\[.*\]$/.test(line)) {
+                    box.appendChild(el('p', 'chk', line.slice(1, -1))); ul = null;
+                } else {
+                    box.appendChild(el('p', null, line)); ul = null;
+                }
+            }
+            return box;
+        }
+
+        function renderSteps(d) {
+            const det = el('details', 'how');
+            det.appendChild(el('summary', null, 'How the agent worked'));
+            const ol = det.appendChild(el('ol'));
+            for (const s of d.steps) {
+                const li = el('li');
+                const main = el('div');
+                let time = s.seconds != null ? s.seconds.toFixed(1) + ' s' : '';
+                if (s.kind === 'tool') {
+                    main.textContent = 'Tool: ' + (TOOL_NAMES[s.name] || s.name);
+                    main.appendChild(el('small', null, s.name + ' · ' + (s.ok ? 'finished' : 'failed: ' + s.reason)));
+                } else if (s.kind === 'llm') {
+                    main.textContent = s.stop === 'tool_use' ? 'AI chose the tools to run' : 'AI wrote the report';
+                    const t = s.tokens || {};
+                    main.appendChild(el('small', null, s.name + ' · ' + (t.input || 0) + ' in / ' + (t.output || 0) + ' out tokens'));
+                } else {
+                    main.textContent = 'AI service unavailable, switched to offline rules';
+                    main.appendChild(el('small', null, s.reason));
+                    time = '';
+                }
+                li.append(main, el('time', null, time));
+                ol.appendChild(li);
+            }
+            const tk = d.tokens || {};
+            det.appendChild(el('p', 'tot', 'Total ' + d.total_seconds.toFixed(1) + ' s' +
+                (tk.input || tk.output ? ' · ' + (tk.input + tk.output) + ' tokens' : '')));
+            return det;
+        }
+
+        async function aiReport(btn) {
+            const out = btn.nextElementSibling;
+            const fd = new FormData();
+            fd.append('kind', btn.dataset.kind);
+            fd.append('uid', btn.dataset.uid);
+            fd.append('marker_mm', btn.dataset.mm);
+            fd.append('method', btn.dataset.method);
+            btn.disabled = true;
+            load('Writing the inspection report', 'report');
+            let d;
+            try {
+                const r = await fetch('/report', { method: 'POST', body: fd });
+                d = await r.json();
+            } catch (e) {
+                d = { ok: false, error: 'Could not reach the server. Try again.' };
+            }
+            document.getElementById('loading').classList.remove('on');
+            btn.disabled = false;
+            out.replaceChildren();
+            if (!d.ok) { out.appendChild(el('div', 'err', d.error || 'Something went wrong.')); return; }
+
+            const card = el('div', 'report');
+            const rh = card.appendChild(el('div', 'rh'));
+            rh.appendChild(el('h2', null, 'Inspection report'));
+            const badges = card.appendChild(el('div', 'badges'));
+            badges.appendChild(el('span', 'badge-draft', 'Draft, needs review by a qualified engineer'));
+            if (d.offline) badges.appendChild(el('span', 'badge-off', 'Generated offline (rule-based)'));
+            card.appendChild(renderReport(d.report));
+            card.appendChild(renderSteps(d));
+            out.appendChild(card);
+            btn.textContent = 'Regenerate AI inspection report';
+            card.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+        }
     </script>
 </body>
 
