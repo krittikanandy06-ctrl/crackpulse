@@ -2,6 +2,20 @@ __pycache__/
 *.pyc
 inspection_*
 test_tilted.png
-test_rectified.pngstatic/uploads/
+test_rectified.png
+static/uploads/
 static/results/
 agent_logs/
+measurements/
+
+# script outputs (dobara ban jaate hain)
+model_prob.png
+vibration_plot.png
+rectified.png
+test_vibration.mp4
+
+# training checkpoint (website ko sirf crack_unet.onnx chahiye)
+best.pt
+
+# purana version
+inspect_crack_old.py

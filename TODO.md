@@ -1,22 +1,36 @@
 # TODO
 
-## 1. Agent should reuse the existing result, not run the measurement again
+## 1. [x] Agent should reuse the existing result, not run the measurement again
 
-When "Generate AI inspection report" is pressed, `/report` in `app.py` runs `agent.py`, and the agent runs
-`inspect_crack.py` / `vibration.py` again on the same file. The website already has that result from
-`/inspect` or `/vibration`, so this repeats 15-20 s of work.
+Done. `/inspect` and `/vibration` save each result to `measurements/<uid>.json`. `/report` passes it to
+`agent.py` with `--crack-json` / `--vib-json`, and the agent uses it when the file, marker size and method
+match. The step list on the website shows "Reused earlier measurement". The tool runs only when no saved
+result exists.
 
-Idea: save the result JSON next to the upload (for example `static/results/<uid>_result.json`) and let the
-agent's tool return that saved result when it exists, running the script only when it does not.
+## 2. [x] Fix the "~1 s per photo" stat on the website
 
-## 2. Fix the "~1 s per photo" stat on the website
+Done. The stat now says "~20 s - Full analysis of one photo on a laptop CPU".
 
-`templates/index.html` shows "~1 s - Per photo on a laptop CPU". Only the model inference takes about 1 s.
-The full process (marker detection, rectification, U-Net on all tiles, measurement) takes about 15 s per
-photo (14-21 s on `test_tilted.png` in the agent logs). Change the stat to show the full time, or label it
-clearly as model inference only.
+Measured on `test_tilted.png` (2400 x 1600 photo), DL method, 3 runs each:
 
-## 3. Test a real AI report once the Bedrock daily limit is lifted
+- U-Net inference only: 13.0 / 15.2 / 18.6 s
+- Full `python inspect_crack.py test_tilted.png 50 --method dl`: 19.6 / 24.5 / 18.5 s
+
+The earlier guess that inference takes ~1 s was wrong. Inference is most of the time: the photo is
+rectified to 3213 x 2128 px (10 px/mm) and the model runs on 70 tiles of 384 x 384 at ~0.17 s each.
+Everything else (Python start-up, marker, rectify, measurement, saving PNGs) is about 2 s.
+
+Possible speedups (not done yet):
+
+- Run the model only on the part of the image that matters (around the marker / user-selected area), or
+  skip tiles that are plain background, instead of the whole rectified image.
+- Reduce tile overlap (64 px -> 32 px) for about 20% fewer tiles.
+- Send several tiles in one forward pass (batching) and check OpenCV DNN thread settings.
+- Try ONNX Runtime or an INT8-quantised model, which are often faster than OpenCV DNN on CPU.
+- Keep the model loaded in the Flask process instead of starting a new Python process per photo
+  (saves ~1 s).
+
+## 3. [ ] Test a real AI report once the Bedrock daily limit is lifted
 
 Bedrock currently returns `ThrottlingException: Too many tokens per day` (HTTP 429) for both Claude Haiku 4.5
 and Nova Lite, so every report so far came from the offline fallback.

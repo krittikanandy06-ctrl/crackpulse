@@ -83,11 +83,22 @@ TOOLS = [
 ]
 
 
+def load_cached(path):
+    """Pehle ka measurement (app.py ne save kiya): {"file", "marker_mm", "method", "result"}"""
+    if not path:
+        return None
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
 class Agent:
-    def __init__(self, photo, video, marker_mm, method, mode):
+    def __init__(self, photo, video, marker_mm, method, mode, cached=None):
         self.files = {"photo": photo, "video": video}
         self.allowed = {str(p) for p in (photo, video) if p}
         self.marker_mm, self.method, self.mode = marker_mm, method, mode
+        self.cached = {k: v for k, v in (cached or {}).items() if v}
         self.steps, self.results, self.retried = [], {}, set()
         self.tool_steps = 0
         self.t0 = time.time()
@@ -114,20 +125,28 @@ class Agent:
             return {"ok": False, "reason": "bad_output", "detail": out[-300:]}
 
     def _call(self, name, inp):
+        """Return: (result, reused) - reused=True jab pehle ka measurement wapas diya"""
         key = "photo" if name == "inspect_crack" else "video"
         path = str(inp.get(key, ""))
         if path not in self.allowed:
             return {"ok": False, "reason": "file_not_allowed",
-                    "detail": f"Only files given by the user can be used: {sorted(self.allowed)}"}
+                    "detail": f"Only files given by the user can be used: {sorted(self.allowed)}"}, False
         if not Path(path).exists():
-            return {"ok": False, "reason": "file_not_found"}
-        mm = str(float(inp.get("marker_mm", self.marker_mm)))
+            return {"ok": False, "reason": "file_not_found"}, False
+        mm = float(inp.get("marker_mm", self.marker_mm))
+        method = inp.get("method", self.method) if name == "inspect_crack" else None
+        if method is not None and method not in ("dl", "classical"):
+            method = self.method
+
+        # same file + same settings ka result pehle se hai -> dobara mat chalao
+        c = self.cached.get(name)
+        if (c and c.get("file") == path and abs(float(c.get("marker_mm", -1)) - mm) < 1e-6
+                and c.get("method") == method):
+            return dict(c["result"]), True
+
         if name == "inspect_crack":
-            method = inp.get("method", self.method)
-            if method not in ("dl", "classical"):
-                method = self.method
-            return self._run_script(["inspect_crack.py", path, mm, "--method", method])
-        return self._run_script(["vibration.py", path, mm])
+            return self._run_script(["inspect_crack.py", path, str(mm), "--method", method]), False
+        return self._run_script(["vibration.py", path, str(mm)]), False
 
     def run_tool(self, name, inp):
         """Tool chalao, log karo; fail ho to user ko batao aur ek baar naya file maango."""
@@ -138,8 +157,9 @@ class Agent:
                     "detail": "Tool step limit reached. Write the report with the results you have."}
         self.tool_steps += 1
         t = time.time()
-        res = self._call(name, inp)
-        self.log(type="tool", tool=name, input=inp, output=res, seconds=round(time.time() - t, 2))
+        res, reused = self._call(name, inp)
+        self.log(type="tool", tool=name, input=inp, output=res, reused=reused,
+                 seconds=round(time.time() - t, 2))
 
         if not res.get("ok"):
             reason = res.get("reason", "")
@@ -346,11 +366,14 @@ def main():
     ap.add_argument("--marker-mm", type=float, default=50.0)
     ap.add_argument("--method", choices=["dl", "classical"], default="dl")
     ap.add_argument("--offline", action="store_true", help="Bedrock ke bina, simple rules se report")
+    ap.add_argument("--crack-json", help="pehle ka crack result (dobara naapne ki jagah yahi use hoga)")
+    ap.add_argument("--vib-json", help="pehle ka vibration result (dobara naapne ki jagah yahi use hoga)")
     a = ap.parse_args()
     if not a.photo and not a.video:
         ap.error("--photo ya --video (ya dono) do")
 
-    agent = Agent(a.photo, a.video, a.marker_mm, a.method, "offline" if a.offline else "bedrock")
+    cached = {"inspect_crack": load_cached(a.crack_json), "measure_vibration": load_cached(a.vib_json)}
+    agent = Agent(a.photo, a.video, a.marker_mm, a.method, "offline" if a.offline else "bedrock", cached)
     report, log_path = agent.run()
     print("\n" + "=" * 60 + "\n" + report + "\n" + "=" * 60)
     print(f"Log: {log_path.relative_to(BASE)}")

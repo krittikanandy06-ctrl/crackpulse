@@ -11,8 +11,9 @@ from flask import Flask, jsonify, render_template, request
 BASE = Path(__file__).parent
 UPLOADS = BASE / "static" / "uploads"
 RESULTS = BASE / "static" / "results"
-UPLOADS.mkdir(parents=True, exist_ok=True)
-RESULTS.mkdir(parents=True, exist_ok=True)
+MEASURE = BASE / "measurements"     # har upload ka result JSON (agent dobara na naape); web pe nahi dikhta
+for d in (UPLOADS, RESULTS, MEASURE):
+    d.mkdir(parents=True, exist_ok=True)
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100 MB tak ki file
@@ -50,6 +51,13 @@ def get_marker_mm():
         return "50.0"
 
 
+def save_measurement(uid, path, result, method=None):
+    """Result yaad rakho taaki /report wala agent wahi use kare."""
+    data = {"file": path.relative_to(BASE).as_posix(), "marker_mm": float(get_marker_mm()),
+            "method": method, "result": result}
+    (MEASURE / f"{uid}.json").write_text(json.dumps(data), encoding="utf-8")
+
+
 def copy_output(name, uid):
     src = BASE / name
     if not src.exists():
@@ -73,6 +81,7 @@ def inspect():
     uid, photo = save_upload(f, ".jpg")
     result = run_script(["inspect_crack.py", str(
         photo), get_marker_mm(), "--method", method])
+    save_measurement(uid, photo, result, method)
     ok = result.get("ok")
     img = copy_output("inspection_result.png", uid) if ok else None
     mask = copy_output("inspection_mask.png", uid) if ok else None
@@ -87,6 +96,7 @@ def vibration():
         return render_template("index.html", tab="vib", error="Choose a video first.")
     uid, video = save_upload(f, ".mp4")
     result = run_script(["vibration.py", str(video), get_marker_mm()])
+    save_measurement(uid, video, result)
     img = copy_output("vibration_plot.png", uid) if result.get("ok") else None
     return render_template("index.html", tab="vib", vib=result, vib_img=img,
                            uid=uid, marker_mm=get_marker_mm())
@@ -110,6 +120,9 @@ def report():
     if kind == "crack":
         method = request.form.get("method", "dl")
         args += ["--method", method if method in ("dl", "classical") else "dl"]
+    saved = MEASURE / f"{uid}.json"
+    if saved.exists():          # pehle ka result -> agent dobara nahi naapega
+        args += ["--crack-json" if kind == "crack" else "--vib-json", str(saved)]
     try:
         # stdin band: agent ka "naya file do" wala sawaal yahan skip ho jaata hai
         p = subprocess.run([sys.executable, *args], cwd=BASE, capture_output=True, text=True,
@@ -126,7 +139,8 @@ def report():
         if s["type"] == "tool":
             out = s["output"]
             steps.append({"kind": "tool", "name": s["tool"], "seconds": s["seconds"],
-                          "ok": bool(out.get("ok")), "reason": out.get("reason")})
+                          "ok": bool(out.get("ok")), "reason": out.get("reason"),
+                          "reused": bool(s.get("reused"))})
         elif s["type"] == "llm":
             steps.append({"kind": "llm", "name": log.get("model"), "seconds": s["seconds"],
                           "tokens": s["tokens"], "stop": s["stop_reason"]})

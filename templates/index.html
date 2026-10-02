@@ -1342,7 +1342,7 @@
 
             <div class="stats">
                 <div><b class="count">0.856</b><span>Crack detection F1 on DeepCrack</span></div>
-                <div><b class="count">~1 s</b><span>Per photo on a laptop CPU</span></div>
+                <div><b class="count">~20 s</b><span>Full analysis of one photo on a laptop CPU</span></div>
                 <div><b class="count">1.3%</b><span>Vibration error on a known signal</span></div>
             </div>
         </section>
@@ -1743,7 +1743,10 @@
                 const li = el('li');
                 const main = el('div');
                 let time = s.seconds != null ? s.seconds.toFixed(1) + ' s' : '';
-                if (s.kind === 'tool') {
+                if (s.kind === 'tool' && s.reused) {
+                    main.textContent = 'Reused earlier measurement';
+                    main.appendChild(el('small', null, (TOOL_NAMES[s.name] || s.name) + ' · ' + s.name + ' · not run again'));
+                } else if (s.kind === 'tool') {
                     main.textContent = 'Tool: ' + (TOOL_NAMES[s.name] || s.name);
                     main.appendChild(el('small', null, s.name + ' · ' + (s.ok ? 'finished' : 'failed: ' + s.reason)));
                 } else if (s.kind === 'llm') {
