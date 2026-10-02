@@ -1,0 +1,13 @@
+photo,line,true_mm,classical_mm,classical_err_pct,dl_mm,dl_err_pct,status
+sheet_lowres.jpg,1,0.3,0.600,100.0,-,-,dl: 1 of 4 lines mili
+sheet_lowres.jpg,2,0.5,0.800,60.0,-,-,dl: 1 of 4 lines mili
+sheet_lowres.jpg,3,1.0,1.400,40.0,1.400,40.0,dl: 1 of 4 lines mili
+sheet_lowres.jpg,4,2.0,2.400,20.0,-,-,dl: 1 of 4 lines mili
+sheet_mild.jpg,1,0.3,0.400,33.3,-,-,dl: 0 of 4 lines mili
+sheet_mild.jpg,2,0.5,0.600,20.0,-,-,dl: 0 of 4 lines mili
+sheet_mild.jpg,3,1.0,1.200,20.0,-,-,dl: 0 of 4 lines mili
+sheet_mild.jpg,4,2.0,2.200,10.0,-,-,dl: 0 of 4 lines mili
+sheet_tilted.jpg,1,0.3,0.439,46.5,-,-,dl: 0 of 4 lines mili
+sheet_tilted.jpg,2,0.5,0.800,60.0,-,-,dl: 0 of 4 lines mili
+sheet_tilted.jpg,3,1.0,1.200,20.0,-,-,dl: 0 of 4 lines mili
+sheet_tilted.jpg,4,2.0,2.200,10.0,-,-,dl: 0 of 4 lines mili
