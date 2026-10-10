@@ -4,6 +4,7 @@ inspection_*
 test_tilted.png
 test_rectified.png
 static/uploads/
+uploads/
 static/results/
 agent_logs/
 measurements/

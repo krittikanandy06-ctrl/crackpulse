@@ -1,0 +1,7 @@
+# Website + measurement scripts ke liye (Docker image: Python 3.12)
+Flask==3.1.3
+gunicorn==23.0.0
+numpy==2.5.3
+opencv-python-headless==5.0.0.93
+scikit-image==0.26.0
+boto3==1.43.107

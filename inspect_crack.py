@@ -1,6 +1,7 @@
 # inspect_crack.py - poora pipeline: photo -> marker se scale -> crack dhoondho -> width/length -> report
 # Chalao:  python inspect_crack.py photo.jpg  [marker_mm]
 import sys, json
+from pathlib import Path
 import cv2
 import numpy as np
 from skimage.morphology import skeletonize
@@ -27,7 +28,8 @@ def raw_mask(img, method):
         global _SEG
         if _SEG is None:
             from crack_model import CrackSegmenter
-            _SEG = CrackSegmenter("crack_unet.onnx")
+            # script ke folder se: kisi bhi folder se chalao (website har request alag temp folder mein chalati hai)
+            _SEG = CrackSegmenter(str(Path(__file__).with_name("crack_unet.onnx")))
         prob = _SEG.predict(img)
         return ((prob > 0.5) * 255).astype(np.uint8)
     # classical: blackhat patli andheri lakeerein ubhaarta hai, Otsu threshold khud chunta hai

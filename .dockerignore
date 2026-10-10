@@ -1,0 +1,36 @@
+# Secrets kabhi image mein nahi
+.env
+.env.*
+*.pem
+*.key
+.aws/
+
+# git / python cache
+.git
+.gitignore
+__pycache__/
+*.pyc
+.vscode/
+.claude/
+
+# user data aur purane outputs (container mein naye bante hain)
+uploads/
+static/uploads/
+static/results/
+measurements/
+agent_logs/
+real_projects/
+test_photos/
+
+# website ko nahi chahiye: training checkpoint, test media, script outputs
+best.pt
+*.mp4
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.csv
+inspection_result.json
+metrics.json
+results/
+inspect_crack_old.py
