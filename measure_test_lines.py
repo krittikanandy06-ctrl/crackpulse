@@ -57,6 +57,7 @@ def measure_photo(path, marker_mm):
     if warped is None:
         return None, "marker_not_found"
 
+    gray = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
     found = {m: find_lines(find_crack_mask(warped, m)) for m in METHODS}
 
     # jis method ko chaaron lines mili, uski height (y) se line number tay karo
@@ -72,8 +73,8 @@ def measure_photo(path, marker_mm):
             dy = np.abs(ref_y - np.nonzero(l)[0].mean())
             k = int(np.argmin(dy))
             if dy[k] < 5 * PPM:
-                # same tarika jo inspect_crack.py mein hai: skeleton par median width
-                widths[k] = float(np.median(measure(l)[2]))
+                # same tarika jo inspect_crack.py mein hai: skeleton par median sub-pixel width
+                widths[k] = float(np.median(measure(l, gray)[2]))
         out[m] = widths
         if len(lines) != len(TRUE_MM):
             notes.append(f"{m}: {len(lines)} of 4 lines mili")

@@ -60,10 +60,60 @@ def find_crack_mask(img, method="classical"):
     return clean
 
 
-def measure(mask):
+def subpixel_widths(gray, mask, skel, dist, step=0.25):
+    """Har skeleton point par crack ke aar-paar (normal direction mein) brightness profile lo.
+    Width = dono kinaron ke beech ki doori jahan andhera aadha ho jaata hai (FWHM),
+    linear interpolation se -> pixel se barik. Mask sirf crack dhoondhta hai, width gray se aati hai.
+    Profile kharab ho (kam contrast / kinara na mile) to purani distance-transform width rehti hai."""
+    ys, xs = np.nonzero(skel)
+    d = dist[ys, xs]
+    widths = d * 2 / PPM
+    if len(ys) == 0:
+        return widths
+
+    # normal direction: smooth mask ke gradient ka structure tensor
+    m = cv2.GaussianBlur(mask.astype(np.float32) / 255, (0, 0), 2)
+    gx, gy = cv2.Sobel(m, cv2.CV_32F, 1, 0), cv2.Sobel(m, cv2.CV_32F, 0, 1)
+    jxx, jxy, jyy = (cv2.GaussianBlur(a, (0, 0), 3) for a in (gx * gx, gx * gy, gy * gy))
+    th = 0.5 * np.arctan2(2 * jxy[ys, xs], jxx[ys, xs] - jyy[ys, xs])
+    nx, ny = np.cos(th), np.sin(th)
+
+    g = gray.astype(np.float32)
+    t = np.arange(-(2 * d.max() + 6), 2 * d.max() + 6 + step / 2, step, dtype=np.float32)
+    at, idx = np.abs(t)[None], np.arange(len(t))[None]
+    for s in range(0, len(ys), 5000):                # remap ki 32767 rows ki limit, aur memory
+        sl = slice(s, s + 5000)
+        mx = (xs[sl, None] + nx[sl, None] * t).astype(np.float32)
+        my = (ys[sl, None] + ny[sl, None] * t).astype(np.float32)
+        p = cv2.remap(g, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+
+        r = (2 * d[sl] + 4)[:, None]                  # crack ke bahar kitni door tak dekhna hai
+        bg = np.nanmedian(np.where((at > r) & (at <= r + 2), p, np.nan), axis=1)
+        inner = np.where(at <= np.maximum(d[sl], 1)[:, None], p, np.inf)
+        c = np.argmin(inner, axis=1)
+        rows = np.arange(len(c))
+        core = inner[rows, c]
+        half = (bg + core) / 2
+
+        # c se baayein aur daayein pehla point jo aadhe se zyada roshan hai
+        above = (p >= half[:, None]) & (at <= r)
+        i = np.where(above & (idx < c[:, None]), idx, -1).max(axis=1)
+        j = np.where(above & (idx > c[:, None]), idx, len(t)).min(axis=1)
+        ok = (bg - core >= 10) & (i >= 0) & (j < len(t))
+        i, j = np.clip(i, 0, len(t) - 2), np.clip(j, 1, len(t) - 1)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            xl = t[i] + (half - p[rows, i]) / (p[rows, i + 1] - p[rows, i]) * step
+            xr = t[j - 1] + (half - p[rows, j - 1]) / (p[rows, j] - p[rows, j - 1]) * step
+            w = widths[sl]
+            w[ok] = (xr - xl)[ok] / PPM
+    return widths
+
+
+def measure(mask, gray=None):
     skel = skeletonize(mask > 0)
     dist = cv2.distanceTransform(mask, cv2.DIST_L2, 5)
-    widths = dist[skel] * 2 / PPM
+    # gray mile to sub-pixel width, warna purana tarika (0.2 mm ke steps mein)
+    widths = subpixel_widths(gray, mask, skel, dist) if gray is not None else dist[skel] * 2 / PPM
     # length: skeleton ki har shaakh ka contour lo; patli line ka contour
     # dono taraf se ghoomta hai, isliye arcLength / 2 = asli lambai
     cnts, _ = cv2.findContours(skel.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -77,9 +127,9 @@ def draw(img, skel, dist, widths):
     if len(widths) == 0:
         return out
     wmax = max(np.percentile(widths, 95), 0.5)
-    ys, xs = np.nonzero(skel)
-    for y, x in zip(ys, xs):
-        t = min(dist[y, x] * 2 / PPM / wmax, 1.0)          # 0 = patla, 1 = chauda
+    ys, xs = np.nonzero(skel)                               # widths isi order mein hain
+    for y, x, w in zip(ys, xs, widths):
+        t = min(w / wmax, 1.0)                              # 0 = patla, 1 = chauda
         color = (0, int(255 * (1 - t)), int(255 * t))      # hara -> laal
         cv2.circle(out, (int(x), int(y)), 2, color, -1)
     return out
@@ -94,7 +144,7 @@ def inspect(path, marker_mm=50.0, method="classical"):
         return {"ok": False, "reason": "marker_not_found"}
 
     mask = find_crack_mask(warped, method)
-    skel, dist, widths, length_mm = measure(mask)
+    skel, dist, widths, length_mm = measure(mask, cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY))
     if len(widths) == 0:
         return {"ok": True, "crack_found": False}
 
