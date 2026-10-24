@@ -79,6 +79,35 @@ is therefore **1.625 mm**.
 | Classical | 1.60 / 1.68 mm | 1.60 / 1.67 mm | −1.5% |
 | DL | 1.68 / 1.76 mm | 1.60 / 1.67 mm | −1.5% |
 
+## 4. Three real photos combined (October 2026)
+
+Same printed sheet on the wall, `measure_test_lines.py`, 50 mm marker, classical method (after the
+sub-pixel change). Two new photos were sent through WhatsApp, which shrank them to 1280 × 960, so the
+marker is only ~2.4 px/mm (the original phone photo is 12.3 px/mm).
+
+| Photo | Scale | 0.3 mm | 0.5 mm | 1.0 mm | 2.0 mm |
+|---|---|---|---|---|---|
+| `20261010_185249.jpg` (phone original) | 12.3 px/mm | 0.25 (−17%) | 0.44 (−12%) | 0.95 (−5%) | 1.96 (−2%) |
+| `WhatsApp … 10.20.30 (1).jpeg` | 2.4 px/mm | failed | failed | failed | failed |
+| `WhatsApp … 10.20.30 (2).jpeg` | 2.5 px/mm | 0.61 (+102%) | 0.71 (+42%) | 0.79 (−21%) | 1.69 (−16%) |
+
+WhatsApp (1) failed: the classical method found only 3 of the 4 lines, so the script could not tell
+which line is which and gave no result. DL found no lines in any photo.
+
+Final table, averaged over the photos that gave a result (n = 2):
+
+| Line | True | Average measured | Average error | Average absolute error |
+|---|---|---|---|---|
+| 1 | 0.30 mm | 0.43 mm | +43% | 59% |
+| 2 | 0.50 mm | 0.58 mm | +15% | 27% |
+| 3 | 1.00 mm | 0.87 mm | −13% | 13% |
+| 4 | 2.00 mm | 1.82 mm | −9% | 9% |
+
+These averages are dominated by the WhatsApp photo. At 2.4 px/mm a 0.3 mm line is under one pixel and
+JPEG compression blurs it, so it reads too wide. The 1 and 2 mm lines read too narrow because compression
+softens their dark core. The original phone photo alone stays within 0.06 mm on every line. For accuracy
+tests, send photos as a WhatsApp *document* (or copy the file directly) so the full resolution is kept.
+
 ## Limits
 
 - Lines thinner than the blur in the photo still read too wide (FWHM cannot go below the blur width).
@@ -91,7 +120,9 @@ is therefore **1.625 mm**.
 Reproduce:
 
 ```
-python measure_test_lines.py real_projects/20261010_185249.jpg.jpeg 50   # photo is not in the repo
+python measure_test_lines.py real_projects/20261010_185249.jpg.jpeg 50   # photos are not in the repo
+python measure_test_lines.py "real_projects/WhatsApp Image 2026-10-24 at 10.20.30 (1).jpeg" 50
+python measure_test_lines.py "real_projects/WhatsApp Image 2026-10-24 at 10.20.30 (2).jpeg" 50
 python measure_test_lines.py test_photos 50
 python inspect_crack.py test_tilted.png 50 --method classical
 python inspect_crack.py test_tilted.png 50 --method dl
