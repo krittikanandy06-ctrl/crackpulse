@@ -119,8 +119,8 @@ against a real structure with a reference sensor.
 
 Full crack analysis of one 2400 × 1600 photo with the U-Net, on a laptop CPU: **19.6 / 24.5 / 18.5 s**
 (3 runs, about 20 s). Most of this is model inference: 70 tiles of 384 × 384, 13.0 to 18.6 s. Everything
-else (start-up, marker, rectification, measurement, saving images) takes about 2 s. Timings on the EC2
-instance have not been measured yet. Ideas for speeding it up are listed in [TODO.md](TODO.md).
+else (start-up, marker, rectification, measurement, saving images) takes about 2 s. **Timing on the EC2
+t4g.small: pending** (not measured yet). Ideas for speeding it up are listed in [TODO.md](TODO.md).
 
 ## Inspection agent
 
@@ -193,15 +193,34 @@ docker run -d --restart unless-stopped -p 8000:8000 crackpulse     # http://loca
 
 ### On EC2 (Graviton / Arm64)
 
-On an Arm instance such as t4g.small, build on the instance so the image is native arm64. All dependencies
-have ready-made arm64 wheels. To serve the site on port 80 (example for Amazon Linux 2023):
+These are the steps used for the live demo:
+
+| | |
+|---|---|
+| Instance | t4g.small (Graviton, Arm64), Amazon Linux 2023, 20 GB gp3 |
+| Region | Sydney (`ap-southeast-2`) |
+| Security group | HTTP (80) and SSH open |
+| Login | EC2 Instance Connect from the browser |
 
 ```bash
+# Docker and git
 sudo dnf install -y docker git && sudo systemctl enable --now docker
-git clone https://github.com/krittikanandy06-ctrl/crackpulse.git && cd crackpulse
-sudo docker build -t crackpulse .
-sudo docker run -d --restart unless-stopped -p 80:8000 --name crackpulse crackpulse
+
+# 2 GB swap
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+
+# Build on the instance, so the image is native arm64 (took about 2 minutes)
+git clone https://github.com/krittikanandy06-ctrl/crackpulse.git && cd crackpulse && sudo docker build -t crackpulse .
+
+# Serve on port 80
+sudo docker run -d --name crackpulse -p 80:8000 --restart unless-stopped crackpulse
+
+# Check
+curl http://localhost/health        # -> ok
 ```
+
+The site is live at http://3.106.138.213. All dependencies have ready-made arm64 wheels, so nothing is
+compiled from source during the build.
 
 To build for both architectures from a laptop, run
 `docker buildx build --platform linux/amd64,linux/arm64 -t crackpulse .`.
