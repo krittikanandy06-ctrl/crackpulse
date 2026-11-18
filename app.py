@@ -1,3 +1,4 @@
+import math
 import json
 import os
 import re
@@ -27,6 +28,13 @@ VIDEO_EXTS = {".mp4", ".mov", ".avi", ".mkv", ".webm", ".m4v"}
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_MB * 1024 * 1024
+
+@app.after_request
+def add_security_headers(resp):
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options", "DENY")
+    resp.headers.setdefault("Referrer-Policy", "no-referrer")
+    return resp
 
 _last_cleanup = 0.0
 
@@ -94,9 +102,12 @@ def save_upload(file, default_ext, allowed):
 
 def get_marker_mm():
     try:
-        return str(float(request.form.get("marker_mm", "50")))
+        value = float(request.form.get("marker_mm", "50"))
     except ValueError:
         return "50.0"
+    if not math.isfinite(value) or not 1 <= value <= 1000:
+        return "50.0"
+    return str(value)
 
 
 def save_measurement(uid, path, result, method=None):
@@ -212,5 +223,6 @@ def report():
 
 
 if __name__ == "__main__":
-    # host 0.0.0.0 = same WiFi pe phone se bhi khulegi
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # debug sirf tab chalu jab FLASK_DEBUG=1 ho. Phone pe kholne ke liye HOST=0.0.0.0 do.
+    app.run(host=os.environ.get("HOST", "127.0.0.1"), port=5000,
+            debug=os.environ.get("FLASK_DEBUG") == "1")
