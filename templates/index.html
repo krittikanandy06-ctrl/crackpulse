@@ -1349,16 +1349,16 @@
 
         <!-- ===== tool ===== -->
         <section class="panel">
-            <div class="tabs" role="tablist">
-                <i></i>
-                <button id="t-crack" role="tab" onclick="show('crack')">Crack</button>
-                <button id="t-vib" role="tab" onclick="show('vib')">Vibration</button>
-            </div>
+           <div class="tabs" role="tablist" aria-label="Choose what to measure">
+    <i aria-hidden="true"></i>
+    <button type="button" id="t-crack" role="tab" aria-controls="crack" onclick="show('crack')">Crack</button>
+    <button type="button" id="t-vib" role="tab" aria-controls="vib" onclick="show('vib')">Vibration</button>
+</div>
 
             {% if error %}<div class="err">{{ error }}</div>{% endif %}
 
             <!-- crack -->
-            <div id="crack" class="pane">
+            <div id="crack" class="pane" role="tabpanel" aria-labelledby="t-crack">
                 <form action="/inspect" method="post" enctype="multipart/form-data"
                     onsubmit="load('Scanning for cracks','photo')">
                     <label class="drop" for="photo">
@@ -1370,7 +1370,7 @@
                                 <circle cx="12" cy="13" r="3.5" />
                             </svg>
                         </div>
-                        <b id="nm-photo">Take or choose a photo</b>
+                        <b id="nm-photo" aria-live="polite">Take or choose a photo</b>
                         <small>Marker flat on the surface, right next to the crack. Shoot straight on, no flash.</small>
                         <input class="vh" type="file" id="photo" name="photo" accept="image/*"
                             onchange="preview(this,'photo')">
@@ -1379,8 +1379,8 @@
                         <div><label class="f" for="mm1">Marker size (mm)</label>
                             <input id="mm1" type="number" name="marker_mm" value="50" step="0.1" min="1">
                         </div>
-                        <div><span class="f">Detection</span>
-                            <div class="seg">
+                        <div><span class="f" id="det-label">Detection</span>
+                            <div class="seg" role="radiogroup" aria-labelledby="det-label">
                                 <label><input type="radio" name="method" value="dl" checked><span>AI
                                         model</span></label>
                                 <label><input type="radio" name="method"
@@ -1388,7 +1388,7 @@
                             </div>
                         </div>
                     </div>
-                    <button class="go">Measure crack</button>
+                    <button type="submit" class="go">Measure crack</button>
                 </form>
 
                 {% if crack %}
@@ -1399,7 +1399,7 @@
                         class="rh">
                         <h2>Crack measured</h2><span class="chip {{ tone }}">Category {{ c }}: {{ crack.bre_label
                             }}</span></div>
-                <div class="gauge" aria-label="Damage category {{ c }} of 5">
+                <div class="gauge" role="img" aria-label="Damage category {{ c }} of 5">
                     {% for i in range(6) %}<span class="l{{ i }} {{ 'on' if i <= c }}" style="--i:{{ i }}"
                         title="{{ i }}: {{ levels[i] }}"></span>{% endfor %}
                 </div>
@@ -1448,7 +1448,7 @@
             </div>
 
             <!-- vibration -->
-            <div id="vib" class="pane">
+            <div id="vib" class="pane" role="tabpanel" aria-labelledby="t-vib">
                 <form action="/vibration" method="post" enctype="multipart/form-data"
                     onsubmit="load('Tracking the marker','video')">
                     <label class="drop" for="video">
@@ -1459,7 +1459,7 @@
                                 <path d="M16 10.5l5-3v9l-5-3z" stroke-linejoin="round" />
                             </svg>
                         </div>
-                        <b id="nm-video">Record or choose a video</b>
+                        <b id="nm-video" aria-live="polite">Record or choose a video</b>
                         <small>Marker fixed to the structure. Keep the phone still, ideally on a tripod.</small>
                         <input class="vh" type="file" id="video" name="video" accept="video/*"
                             onchange="preview(this,'video')">
@@ -1469,7 +1469,7 @@
                             <input id="mm2" type="number" name="marker_mm" value="50" step="0.1" min="1">
                         </div>
                     </div>
-                    <button class="go">Measure vibration</button>
+                    <button type="submit" class="go">Measure vibration</button>
                 </form>
 
                 {% if vib %}
