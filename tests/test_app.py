@@ -73,3 +73,14 @@ def test_too_large_upload(monkeypatch):
     )
     assert r.status_code == 413
     assert b"too large" in r.data
+    def test_security_headers():
+    r = client().get("/")
+    assert r.headers["X-Content-Type-Options"] == "nosniff"
+    assert r.headers["X-Frame-Options"] == "DENY"
+
+
+def test_marker_size_rejects_nan():
+    with crackpulse.app.test_request_context(
+        "/inspect", method="POST", data={"marker_mm": "nan"}
+    ):
+        assert crackpulse.get_marker_mm() == "50.0"
